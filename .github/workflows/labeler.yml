@@ -27,6 +27,11 @@ jobs:
         echo "Modified files: $FILES"
         LABELS=""
 
+        console.log("Labels in this repository:");
+          labels.data.forEach(label => {
+            console.log(label.name);
+          });
+          
         # Verifica se o nome do arquivo contém 'ios' ou 'android'
         if echo "$FILES" | grep -i 'ios'; then
           LABELS="ios,"

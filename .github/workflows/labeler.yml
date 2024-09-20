@@ -1,0 +1,55 @@
+name: Label PR based on file names
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  apply-labels:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Este job não vai bloquear a pipeline
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get list of changed files
+      id: changed_files
+      run: |
+        git fetch --depth=1
+        echo "::set-output name=files::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})"
+
+    - name: Apply labels
+      if: steps.changed_files.outputs.files != ''
+      continue-on-error: true  # Garante que este step específico não falhe a pipeline
+      run: |
+        FILES="${{ steps.changed_files.outputs.files }}"
+        echo "Modified files: $FILES"
+        LABELS=""
+
+        # Verifica se o nome do arquivo contém 'ios' ou 'android'
+        if echo "$FILES" | grep -i 'ios'; then
+          LABELS="${LABELS}ios,"
+        fi
+        if echo "$FILES" | grep -i 'android'; then
+          LABELS="${LABELS}android,"
+        fi
+        
+        # Aplica as labels
+        if [ -n "$LABELS" ]; then
+          LABELS=$(echo "$LABELS" | sed 's/,$//')  # Remove a vírgula final
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "$LABELS"
+        fi
+
+    - name: Set GitHub labels
+      uses: actions/github-script@v6
+      continue-on-error: true  # Este step também não bloqueia a pipeline
+      with:
+        script: |
+          const labels = "${{ steps.apply-labels.outputs.labels }}".split(',');
+          github.rest.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: labels
+          })

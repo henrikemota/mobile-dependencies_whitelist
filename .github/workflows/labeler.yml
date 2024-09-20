@@ -7,7 +7,6 @@ on:
 jobs:
   apply-labels:
     runs-on: ubuntu-latest
-    continue-on-error: true  # Este job não vai bloquear a pipeline
 
     steps:
     - name: Checkout code
@@ -17,45 +16,49 @@ jobs:
       id: changed_files
       run: |
         git fetch --depth=1
-        echo "::set-output name=files::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})"
+        # Obtém a lista de arquivos modificados
+        FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+        echo "FILES=$FILES" >> $GITHUB_ENV  # Armazena os arquivos em um arquivo de ambiente
 
     - name: Apply labels
-      if: steps.changed_files.outputs.files != ''
-      continue-on-error: true  # Garante que este step específico não falhe a pipeline
+      if: env.FILES != ''
       run: |
-        FILES="${{ steps.changed_files.outputs.files }}"
+        FILES="$FILES"
         echo "Modified files: $FILES"
         LABELS=""
 
         # Verifica se o nome do arquivo contém 'ios' ou 'android'
         if echo "$FILES" | grep -i 'ios'; then
-          LABELS="ios,"
+          LABELS="${LABELS}ios,"
         fi
         if echo "$FILES" | grep -i 'android'; then
-          LABELS="android,"
-        fi
-        
-        # Aplica as labels
-        if [ -n "$LABELS" ]; then
-          LABELS=$(echo "$LABELS" | sed 's/,$//')  # Remove a vírgula final
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "$LABELS"
+          LABELS="${LABELS}android,"
         fi
 
-    - name: List and print labels
+        # Remove a vírgula final, se houver labels
+        if [ -n "$LABELS" ]; then
+          LABELS=$(echo "$LABELS" | sed 's/,$//')
+        fi
+
+        # Armazena as labels em um arquivo de ambiente
+        echo "LABELS=$LABELS" >> $GITHUB_ENV
+
+    - name: Set GitHub labels
       uses: actions/github-script@v6
       with:
         script: |
-          const labels = await github.rest.issues.listLabelsForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo
-          });
-    
-          # Verifica se há labels antes de imprimir
-          if (labels.data.length === 0) {
-            console.log("No labels found in this repository.");
-          } else {
-            console.log("Labels in this repository:");
-            labels.data.forEach(label => {
-              console.log(label.name);
+          const labels = process.env.LABELS.split(',');
+          const prNumber = context.issue.number;
+
+          if (labels.length > 0 && labels[0] !== "") {
+            // Aplica as labels ao PR
+            await github.rest.issues.addLabels({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: labels,
             });
+            console.log(`Labels applied: ${labels}`);
+          } else {
+            console.log("No labels to apply.");
           }

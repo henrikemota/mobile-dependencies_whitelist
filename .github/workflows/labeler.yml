@@ -50,7 +50,7 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const labels = process.env.LABELS.split(',');
+          const labels = process.env.LABELS ? process.env.LABELS.split(',') : [];
           const prNumber = context.issue.number;
 
           if (labels.length > 0 && labels[0] !== "") {

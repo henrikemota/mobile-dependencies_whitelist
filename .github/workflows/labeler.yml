@@ -14,12 +14,21 @@ jobs:
       with:
         fetch-depth: 0  # Faz o checkout de todo o histórico
 
+    - name: Debug commits
+      run: |
+        echo "Before commit: ${{ github.event.before }}"
+        echo "Current commit: ${{ github.sha }}"
+
     - name: Get list of changed files
       id: changed_files
       run: |
         git fetch --depth=1
         FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
         echo "FILES=$FILES" >> $GITHUB_ENV  # Armazena os arquivos em um arquivo de ambiente
+        echo "Changed files: $FILES"  # Imprime os arquivos modificados no log
+        if [ -z "$FILES" ]; then
+          echo "No files modified."
+        fi
 
     - name: Apply labels
       run: |

@@ -23,24 +23,6 @@ jobs:
     - name: Apply labels
       run: |
         echo "FILES=$FILES"
-        echo "Modified files: $FILES"
-        LABELS=""
-
-        # # Verifica se o nome do arquivo contém 'ios' ou 'android'
-        # if echo "$FILES" | grep -i 'ios'; then
-        #   LABELS="${LABELS}ios,"
-        # fi
-        # if echo "$FILES" | grep -i 'android'; then
-        #   LABELS="${LABELS}android,"
-        # fi
-
-        # # Remove a vírgula final, se houver labels
-        # if [ -n "$LABELS" ]; then
-        #   LABELS=$(echo "$LABELS" | sed 's/,$//')
-        # fi
-
-        # # Armazena as labels em um arquivo de ambiente
-        # echo "LABELS=$LABELS" >> $GITHUB_ENV
 
     - name: Set GitHub labels
       uses: actions/github-script@v6

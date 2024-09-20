@@ -11,6 +11,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Faz o checkout de todo o histórico
 
     - name: Get list of changed files
       id: changed_files
@@ -18,7 +20,6 @@ jobs:
         git fetch --depth=1
         FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
         echo "FILES=$FILES" >> $GITHUB_ENV  # Armazena os arquivos em um arquivo de ambiente
-        echo "Changed files: $FILES"  # Imprime os arquivos modificados no log
 
     - name: Apply labels
       run: |
@@ -29,17 +30,14 @@ jobs:
         # Verifica se o nome do arquivo contém 'ios' ou 'android'
         if echo "$FILES" | grep -i 'ios'; then
           LABELS="${LABELS}ios,"
-          echo "Found 'ios' in modified files."
         fi
         if echo "$FILES" | grep -i 'android'; then
           LABELS="${LABELS}android,"
-          echo "Found 'android' in modified files."
         fi
 
         # Remove a vírgula final, se houver labels
         if [ -n "$LABELS" ]; then
           LABELS=$(echo "$LABELS" | sed 's/,$//')
-          echo "Labels to be applied: $LABELS"  # Log das labels a serem aplicadas
           echo "LABELS=$LABELS" >> $GITHUB_ENV  # Armazena as labels no ambiente
         else
           echo "No labels to apply."
@@ -54,7 +52,6 @@ jobs:
           const prNumber = context.issue.number;
 
           if (labels.length > 0 && labels[0] !== "") {
-            // Aplica as labels ao PR
             await github.rest.issues.addLabels({
               issue_number: prNumber,
               owner: context.repo.owner,

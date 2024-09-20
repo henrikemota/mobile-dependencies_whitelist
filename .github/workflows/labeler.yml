@@ -21,11 +21,10 @@ jobs:
         echo "Changed files: $FILES"  # Imprime os arquivos modificados no log
 
     - name: Apply labels
+      if: steps.changed_files.outputs.files != ''
       run: |
-        git fetch --depth=1
-        FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-        echo "FILES=$FILES" >> $GITHUB_ENV  # Armazena os arquivos em um arquivo de ambiente
-        echo "Changed files: $FILES"  # Imprime os arquivos modificados no log
+        echo "FILES from previous step: ${{ steps.changed_files.outputs.files }}"
+        # Resto do código...
 
     - name: Set GitHub labels
       uses: actions/github-script@v6

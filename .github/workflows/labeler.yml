@@ -16,9 +16,9 @@ jobs:
       id: changed_files
       run: |
         git fetch --depth=1
-        # Obtém a lista de arquivos modificados
         FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
         echo "FILES=$FILES" >> $GITHUB_ENV  # Armazena os arquivos em um arquivo de ambiente
+        echo "Changed files: $FILES"  # Imprime os arquivos modificados no log
 
     - name: Apply labels
       if: env.FILES != ''

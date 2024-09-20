@@ -29,10 +29,10 @@ jobs:
 
         # Verifica se o nome do arquivo contém 'ios' ou 'android'
         if echo "$FILES" | grep -i 'ios'; then
-          LABELS="${LABELS}ios,"
+          LABELS="ios,"
         fi
         if echo "$FILES" | grep -i 'android'; then
-          LABELS="${LABELS}android,"
+          LABELS="android,"
         fi
         
         # Aplica as labels

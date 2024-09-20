@@ -27,11 +27,6 @@ jobs:
         echo "Modified files: $FILES"
         LABELS=""
 
-        console.log("Labels in this repository:");
-          labels.data.forEach(label => {
-            console.log(label.name);
-          });
-          
         # Verifica se o nome do arquivo contém 'ios' ou 'android'
         if echo "$FILES" | grep -i 'ios'; then
           LABELS="ios,"
@@ -46,15 +41,21 @@ jobs:
           gh pr edit ${{ github.event.pull_request.number }} --add-label "$LABELS"
         fi
 
-    - name: Set GitHub labels
+    - name: List and print labels
       uses: actions/github-script@v6
-      continue-on-error: true  # Este step também não bloqueia a pipeline
       with:
         script: |
-          const labels = "${{ steps.apply-labels.outputs.labels }}".split(',');
-          github.rest.issues.addLabels({
-            issue_number: context.issue.number,
+          const labels = await github.rest.issues.listLabelsForRepo({
             owner: context.repo.owner,
-            repo: context.repo.repo,
-            labels: labels
-          })
+            repo: context.repo.repo
+          });
+    
+          # Verifica se há labels antes de imprimir
+          if (labels.data.length === 0) {
+            console.log("No labels found in this repository.");
+          } else {
+            console.log("Labels in this repository:");
+            labels.data.forEach(label => {
+              console.log(label.name);
+            });
+          }
